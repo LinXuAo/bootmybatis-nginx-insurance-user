@@ -16,7 +16,7 @@ public class ErrorCode {
     public final static String AUTH_AUTHENTICATION_UPDATE="10004";//注册失败，前台传入数据有误
 	public final static String AUTH_PARAMETER_ERROR="10005";//登录失败，用户未激活
 	public final static String AUTH_PARAMETER_ERROR_PASSWD="100051";//登录失败，密码错误
-	public final static String AUTH_ACTIVATE_FAILED="10006";//登录失败,用户未注册
+	public final static String AUTH_ACTIVATE_FAILED="10006";//登录失败,账号输入错误
 	public final static String AUTH_ACTIVATE_FAILED_ERROR="100061";//激活失败,激活码错误
 	public final static String AUTH_ACTIVATE_FAILED_TRUE="100062";//激活失败,该用户已经激活
 	public final static String AUTH_ACTIVATE_FAILED_NULL="100063";//激活失败,该用户不存在

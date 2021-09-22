@@ -46,10 +46,11 @@ public class InsuranceUserController {
                 }
 
             }else {//未激活的情况
+                RidesUtil.jedisSend(user);
                 return DtoUtil.returnFail("登录失败！该用户未激活，即将去激活",ErrorCode.AUTH_PARAMETER_ERROR);
             }
         }else{//用户未注册
-            return DtoUtil.returnFail("登录失败！该用户未注册，即将去注册",ErrorCode.AUTH_ACTIVATE_FAILED);
+            return DtoUtil.returnFail("登录失败！账号输入错误，请重新输入",ErrorCode.AUTH_ACTIVATE_FAILED);
         }
     }
     /**
@@ -63,7 +64,7 @@ public class InsuranceUserController {
             if (user!= null) {
                 System.out.println("注册失败该用户已经存在");
                 if (user.getActivated() == 1) {//用户存在已经激活的情况
-                    return DtoUtil.returnFail("注册失败,该用户已经存在,且已激活", ErrorCode.AUTH_AUTHENTICATION_FAILED);
+                    return DtoUtil.returnFail("注册失败,该用户已经存在,且已激活，即将去激活", ErrorCode.AUTH_AUTHENTICATION_FAILED);
                 } else {//用户存在未激活情况(需要激活，重新发送验证码)
                     InsuranceUser olduser = new InsuranceUser();
                     olduser.setUserCode(insuranceUserSaveVo.getUserCode());
