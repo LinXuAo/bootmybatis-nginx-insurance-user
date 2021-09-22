@@ -1,18 +1,17 @@
 package com.controller;
 
 
+import com.alibaba.fastjson.JSON;
 import com.po.Dto;
 import com.po.InsuranceUser;
 import com.service.InsuranceUserService;
-import com.util.DtoUtil;
-import com.util.ErrorCode;
-import com.util.MD5Util;
-import com.util.RidesUtil;
+import com.util.*;
 import com.util.vo.InsuranceUserSaveVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
@@ -29,7 +28,7 @@ public class InsuranceUserController {
      * 用来做登录的方法
      **/
     @RequestMapping(value = "/login")
-    public Dto login(@RequestBody InsuranceUserSaveVo insuranceUserSaveVo) {
+    public Dto login(HttpServletRequest request,HttpServletResponse response,@RequestBody InsuranceUserSaveVo insuranceUserSaveVo) {
         System.out.println("用来做登录的方法........" + insuranceUserSaveVo.toString());
         String upasswd = MD5Util.getMd5(insuranceUserSaveVo.getUserPassword(), 32);
         System.out.println("upasswd:"+upasswd);
@@ -37,9 +36,38 @@ public class InsuranceUserController {
         System.out.println("user:"+user);
         if (user!=null){
             System.out.println("该用户已注册");
-            if(user.getActivated()==1){//已经激活的情况
-
-                if (user.getUserPassword().equals(upasswd)){
+            if (jedis.get(user.getUserCode())!=null){
+                 String oldToken=jedis.get(user.getUserCode());
+                //System.out.println("222222222");
+                try {
+                    /**判断相关参数完成不同浏览器登录操作*/
+                    String toke=TokenUtil.replaceToken(request.getHeader("user-agent"),oldToken,response);
+                        return DtoUtil.returnSuccess("登录成功！");
+                } catch (TokenValidationFailedException e) {
+                    e.printStackTrace();
+                    return DtoUtil.returnFail(e.getMessage(),ErrorCode.AUTH_REPLACEMENT_FAILED);
+                }
+            }else {
+               if(user.getActivated()==1){//已经激活的情况
+                   if (user.getUserPassword().equals(upasswd)){
+                       //System.out.println("11111111111");
+                    /**获取浏览器请求头信息,user-agent固定写法*/
+                    String requestHeader=request.getHeader("user-agent");
+                    System.out.println("requestHeader:"+requestHeader);
+                    /**生成Token*/
+                    String token= TokenUtil.getTokenGenerator(requestHeader,user);
+                    /**将Token存入Redis中*/
+                    jedis.setex(user.getUserCode(),7200,token);
+                    /**将Token作为key值，将该用户对象作为value值存入Redis中，目标是后边用来判断该用户是否已经登录*/
+                    String userJson= JSON.toJSONString(user);
+                    jedis.setex(token,7200,userJson);
+                    /**将Token存入前端浏览器(Cookie)中*/
+                    Cookie usToken=new Cookie("token",token);
+                    /**该方法用于设置cookie的生存时间，传入的参数表示生存时间，是int型的秒数值*/
+                    usToken.setMaxAge(60*60*2);
+                    /**存入浏览器Cookie中*/
+                    response.addCookie(usToken);
+                       System.out.println("登录成功");
                     return DtoUtil.returnSuccess("登录成功！");
                 }else {
                     return DtoUtil.returnFail("登录失败！密码错误,请重新输入密码",ErrorCode.AUTH_PARAMETER_ERROR_PASSWD);
@@ -48,6 +76,7 @@ public class InsuranceUserController {
             }else {//未激活的情况
                 RidesUtil.jedisSend(user);
                 return DtoUtil.returnFail("登录失败！该用户未激活，即将去激活",ErrorCode.AUTH_PARAMETER_ERROR);
+              }
             }
         }else{//用户未注册
             return DtoUtil.returnFail("登录失败！账号输入错误，请重新输入",ErrorCode.AUTH_ACTIVATE_FAILED);
@@ -90,6 +119,7 @@ public class InsuranceUserController {
                 if (user.getActivated() == 0) {//未激活,开始激活操作
                     if (activedCode.equals(jedis.get(user.getUserCode()))) {
                         Integer code = insuranceUserService.updateActived(user.getUserCode());
+                        jedis.del(user.getUserCode());
                         return DtoUtil.returnSuccess("激活成功！");
                     } else {
                         if(jedis.get(user.getUserCode())!=null){
