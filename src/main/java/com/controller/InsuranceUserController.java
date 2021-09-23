@@ -37,15 +37,24 @@ public class InsuranceUserController {
         if (user!=null){
             System.out.println("该用户已注册");
             if (jedis.get(user.getUserCode())!=null){
-                 String oldToken=jedis.get(user.getUserCode());
+                if (user.getUserPassword().equals(upasswd)){
+                String oldToken=jedis.get(user.getUserCode());
                 //System.out.println("222222222");
                 try {
                     /**判断相关参数完成不同浏览器登录操作*/
                     String toke=TokenUtil.replaceToken(request.getHeader("user-agent"),oldToken,response);
-                        return DtoUtil.returnSuccess("登录成功！");
+                       if (toke!=null) {
+                           return DtoUtil.returnSuccess("登录成功！");
+                       }else {
+                          return DtoUtil.returnFail("登录失败，该账户异地登录，请注意账号安全",ErrorCode.AUTH_REPLACEMENT_FAILED);
+                       }
+
                 } catch (TokenValidationFailedException e) {
                     e.printStackTrace();
                     return DtoUtil.returnFail(e.getMessage(),ErrorCode.AUTH_REPLACEMENT_FAILED);
+                }
+                }else {
+                    return DtoUtil.returnFail("登录失败！密码错误,请重新输入密码",ErrorCode.AUTH_PARAMETER_ERROR_PASSWD);
                 }
             }else {
                if(user.getActivated()==1){//已经激活的情况
@@ -54,7 +63,8 @@ public class InsuranceUserController {
                     /**获取浏览器请求头信息,user-agent固定写法*/
                     String requestHeader=request.getHeader("user-agent");
                     System.out.println("requestHeader:"+requestHeader);
-                    /**生成Token*/
+                    /**生成Token
+                     * requestHeader（实参）也就是后边的agent（形参）*/
                     String token= TokenUtil.getTokenGenerator(requestHeader,user);
                     /**将Token存入Redis中*/
                     jedis.setex(user.getUserCode(),7200,token);

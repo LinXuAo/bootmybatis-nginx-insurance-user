@@ -37,7 +37,7 @@ public class TokenUtil {
     public static String getTokenGenerator(String agent, InsuranceUser us) {
         try {
             /**
-             * 解析浏览器的user agent字符串，返回UserAgentInfo对象。
+             * 解析浏览器的user agent字符串(User-Agent其实就是你的浏览器信息)，返回UserAgentInfo对象。
              * 将请求头的信息转换成UserAgentInfo的对象格式
              * 按照请求头的格式信息将请求头分割出来
              */
@@ -117,7 +117,7 @@ public class TokenUtil {
         long passed = Calendar.getInstance().getTimeInMillis()
                 - TokenGenTime.getTime();// token已产生时间
         if (passed <  60000) {// 置换保护期内
-            throw new TokenValidationFailedException("token处于置换保护期内，剩余"
+            throw new TokenValidationFailedException("该账户处于置换保护期内，剩余"
                     + (60000 - passed) / 1000
                     + "(s),禁止置换");
         }
