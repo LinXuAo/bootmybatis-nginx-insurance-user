@@ -27,8 +27,9 @@ public class InsuranceUserServiceImpl implements InsuranceUserService {
         return insuranceUserMapper.updateActived(userCode);
     }
 
-//    @Override
-//    public InsuranceUser login(String userCode) {
-//        return insuranceUserMapper.login(userCode);
-//    }
+    @Override
+    public Integer updateCode(String userPassword,String userCode) {
+        return insuranceUserMapper.updateCode(userPassword,userCode);
+    }
+
 }

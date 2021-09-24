@@ -5,12 +5,11 @@ import com.po.Dto;
 import com.po.InsuranceUser;
 import com.service.InsuranceUserService;
 
-import com.util.DtoUtil;
-import com.util.ErrorCode;
-import com.util.TokenUtil;
+import com.util.*;
 import com.util.vo.InsuranceUserSaveVo;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -64,5 +63,55 @@ public class InsuranceLoginController {
         }
         return DtoUtil.returnFail("账户异常，请重新登录",ErrorCode.AUTH_REPLACEMENT_FAILED);
     }
-
+    /**
+     * 修改密码时获取验证码的方法
+     * */
+    @RequestMapping(value = "/getCode")
+    public Dto getCode(@RequestBody InsuranceUserSaveVo insuranceUserSaveVo) {
+        System.out.println("修改密码时获取验证码的方法........" + insuranceUserSaveVo.getUserCode());
+        InsuranceUser user = insuranceUserService.findByUserCode(insuranceUserSaveVo.getUserCode());
+        if (user!=null ){
+             RidesUtil.jedisSend(user);
+             return DtoUtil.returnSuccess("验证码发送成功");
+          }
+        return DtoUtil.returnFail("账户输入错误",ErrorCode.AUTH_ILLEGAL_USERCODE);
+    }
+    /**
+     * 确定验证码是否一致的方法
+     * */
+    @RequestMapping(value = "/confirmCode/{code}")
+    public Dto confirmCode(@PathVariable String code,@RequestBody InsuranceUserSaveVo insuranceUserSaveVo) {
+        System.out.println("确定验证码是否一致的方法........" + insuranceUserSaveVo.getUserCode()+code);
+        if (insuranceUserSaveVo.getUserCode()!=null){
+            if(code!=null && jedis.get(insuranceUserSaveVo.getUserCode())!=null){
+                if (code.equals(jedis.get(insuranceUserSaveVo.getUserCode()))){
+                    return DtoUtil.returnSuccess("验证成功！");
+                }else{
+                    return DtoUtil.returnFail("验证码输入错误，请重新输入",ErrorCode.AUTH_CODE_FAILED);
+                }
+           }else {
+                return DtoUtil.returnFail("验证码过期，请重新获取验证码",ErrorCode.AUTH_CODE_FAILED_NOT);
+            }
+        }
+        return DtoUtil.returnFail("数据异常，请重新输入",ErrorCode.AUTH_UNKNOWN);
+    }
+    /**
+     * 修改密码的方法
+     * */
+    @RequestMapping(value = "/updateCode")
+    public Dto updateCode(@RequestBody InsuranceUserSaveVo insuranceUserSaveVo) {
+        System.out.println("修改密码的方法........" + insuranceUserSaveVo.toString());
+        if (insuranceUserSaveVo!=null) {
+            //处理密码的加密操作(MD5)
+           String userPassword = MD5Util.getMd5(insuranceUserSaveVo.getUserPassword(), 32);
+            System.out.println("userPassword:"+userPassword);
+            String userCode = insuranceUserSaveVo.getUserCode();
+            Integer code = insuranceUserService.updateCode(userPassword, userCode);
+            if (code > 0) {
+                return DtoUtil.returnSuccess("密码修改成功！");
+            }
+            return DtoUtil.returnFail("修改失败", ErrorCode.AUTH_UPDATECODE_FAILED);
+        }
+        return DtoUtil.returnFail("网络异常，请重新输入",ErrorCode.AUTH_UNKNOWN);
+    }
 }

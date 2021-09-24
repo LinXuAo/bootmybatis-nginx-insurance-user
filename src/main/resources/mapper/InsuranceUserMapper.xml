@@ -10,7 +10,7 @@
     <update id="updateActived" parameterType="String">
         update insae_user set activated=1 where userCode=#{userCode}
     </update>
-<!--    <select id="login" parameterType="java.lang.String" resultType="com.po.InsuranceUser">-->
-<!--        select * from insae_user where userCode=#{userCode}-->
-<!--    </select>-->
+    <update id="updateCode" parameterType="java.lang.String">
+        update insae_user set userPassword=#{userPassword} where userCode=#{userCode}
+    </update>
 </mapper>

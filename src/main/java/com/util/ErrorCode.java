@@ -24,5 +24,8 @@ public class ErrorCode {
 	public final static String AUTH_REPLACEMENT_FAILED="10007";//置换token失败,Token不匹配，异地登录
 	public final static String AUTH_TOKEN_INVALID="10008";//token无效
 	public static final String AUTH_ILLEGAL_USERCODE = "10009";//非法的用户名
+	public final static String AUTH_CODE_FAILED="20000";//修改密码，验证码输入错误
+	public final static String AUTH_CODE_FAILED_NOT="20001";//修改密码，验证码过期
+	public final static String AUTH_UPDATECODE_FAILED="20002";//修改密码失败
 	/*认证模块错误码-end*/
 }

@@ -15,8 +15,8 @@ public interface InsuranceUserService {
      * 用来做账号激活的方法
      * **/
     public Integer updateActived(String userCode);
-//    /**
-//     * 查询密码的方法(做登录时时判断密码是否一致)
-//     * */
-//    public InsuranceUser login(String userCode);
+    /**
+     * 修改密码的方法
+     * */
+    public Integer updateCode(String userPassword,String userCode);
 }

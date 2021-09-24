@@ -3,6 +3,7 @@ package com.mapper;
 
 import com.po.InsuranceUser;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface InsuranceUserMapper {
@@ -18,8 +19,8 @@ public interface InsuranceUserMapper {
      * 用来做账号激活的方法
      * **/
     public Integer updateActived(String userCode);
-//    /**
-//     * 查询密码的方法(做登录时时判断密码是否一致)
-//     * */
-//    public InsuranceUser login(String userCode);
+    /**
+     * 修改密码的方法
+     * */
+    public Integer updateCode(@Param(value = "userPassword") String userPassword, @Param(value = "userCode")String userCode);
 }
